@@ -1,0 +1,12 @@
+{
+  "name": "Syed Omair Go-Kit Sample",
+  "description": "Syed Omair go-kit example",
+  "keywords": [
+    "go-kit",
+    "go"
+  ],
+  "image": "heroku/go:1.7",
+  "mount_dir": "src/github.com/syedomair/gokit_micro",
+  "website": "http://github.com/syedomair/gokit_micro",
+  "repository": "http://github.com/syedomair/gokit_micro"
+}
