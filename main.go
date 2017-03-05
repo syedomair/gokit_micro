@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"os"
+        "database/sql"
+        _ "github.com/lib/pq"
 
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 
@@ -35,6 +37,17 @@ func main() {
 		Name:      "count_result",
 		Help:      "The result of each count method.",
 	}, []string{}) // no fields here
+
+        db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+        if err != nil {
+            logger.Log("Error: The data source arguments are not valid")
+        }
+        err = db.Ping()
+        if err != nil {
+            logger.Log("Error: Could not establish a connection with the database")
+        }
+
+
 
 	var svc StringService
 	svc = stringService{}
