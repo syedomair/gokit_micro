@@ -1,11 +1,14 @@
 package http
 
 import (
-	"fmt"
+	"bytes"
+	"context"
+	"encoding/json"
+	"encoding/xml"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
-	"golang.org/x/net/context"
 	"golang.org/x/net/context/ctxhttp"
 
 	"github.com/go-kit/kit/endpoint"
@@ -19,11 +22,18 @@ type Client struct {
 	enc            EncodeRequestFunc
 	dec            DecodeResponseFunc
 	before         []RequestFunc
+	after          []ClientResponseFunc
 	bufferedStream bool
 }
 
-// NewClient returns a
-func NewClient(method string, tgt *url.URL, enc EncodeRequestFunc, dec DecodeResponseFunc, options ...ClientOption) *Client {
+// NewClient constructs a usable Client for a single remote method.
+func NewClient(
+	method string,
+	tgt *url.URL,
+	enc EncodeRequestFunc,
+	dec DecodeResponseFunc,
+	options ...ClientOption,
+) *Client {
 	c := &Client{
 		client:         http.DefaultClient,
 		method:         method,
@@ -31,6 +41,7 @@ func NewClient(method string, tgt *url.URL, enc EncodeRequestFunc, dec DecodeRes
 		enc:            enc,
 		dec:            dec,
 		before:         []RequestFunc{},
+		after:          []ClientResponseFunc{},
 		bufferedStream: false,
 	}
 	for _, option := range options {
@@ -48,20 +59,26 @@ func SetClient(client *http.Client) ClientOption {
 	return func(c *Client) { c.client = client }
 }
 
-// SetClientBefore sets the RequestFuncs that are applied to the outgoing HTTP
+// ClientBefore sets the RequestFuncs that are applied to the outgoing HTTP
 // request before it's invoked.
-func SetClientBefore(before ...RequestFunc) ClientOption {
+func ClientBefore(before ...RequestFunc) ClientOption {
 	return func(c *Client) { c.before = before }
 }
 
-// SetBufferedStream sets whether the Response.Body is left open, allowing it
+// ClientAfter sets the ClientResponseFuncs applied to the incoming HTTP
+// request prior to it being decoded. This is useful for obtaining anything off
+// of the response and adding onto the context prior to decoding.
+func ClientAfter(after ...ClientResponseFunc) ClientOption {
+	return func(c *Client) { c.after = after }
+}
+
+// BufferedStream sets whether the Response.Body is left open, allowing it
 // to be read from later. Useful for transporting a file as a buffered stream.
-func SetBufferedStream(buffered bool) ClientOption {
+func BufferedStream(buffered bool) ClientOption {
 	return func(c *Client) { c.bufferedStream = buffered }
 }
 
-// Endpoint returns a usable endpoint that will invoke the RPC specified by
-// the client.
+// Endpoint returns a usable endpoint that invokes the remote endpoint.
 func (c Client) Endpoint() endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		ctx, cancel := context.WithCancel(ctx)
@@ -69,11 +86,11 @@ func (c Client) Endpoint() endpoint.Endpoint {
 
 		req, err := http.NewRequest(c.method, c.tgt.String(), nil)
 		if err != nil {
-			return nil, fmt.Errorf("NewRequest: %v", err)
+			return nil, err
 		}
 
-		if err = c.enc(req, request); err != nil {
-			return nil, fmt.Errorf("Encode: %v", err)
+		if err = c.enc(ctx, req, request); err != nil {
+			return nil, err
 		}
 
 		for _, f := range c.before {
@@ -82,17 +99,52 @@ func (c Client) Endpoint() endpoint.Endpoint {
 
 		resp, err := ctxhttp.Do(ctx, c.client, req)
 		if err != nil {
-			return nil, fmt.Errorf("Do: %v", err)
+			return nil, err
 		}
 		if !c.bufferedStream {
 			defer resp.Body.Close()
 		}
 
-		response, err := c.dec(resp)
+		for _, f := range c.after {
+			ctx = f(ctx, resp)
+		}
+
+		response, err := c.dec(ctx, resp)
 		if err != nil {
-			return nil, fmt.Errorf("Decode: %v", err)
+			return nil, err
 		}
 
 		return response, nil
 	}
+}
+
+// EncodeJSONRequest is an EncodeRequestFunc that serializes the request as a
+// JSON object to the Request body. Many JSON-over-HTTP services can use it as
+// a sensible default. If the request implements Headerer, the provided headers
+// will be applied to the request.
+func EncodeJSONRequest(c context.Context, r *http.Request, request interface{}) error {
+	r.Header.Set("Content-Type", "application/json; charset=utf-8")
+	if headerer, ok := request.(Headerer); ok {
+		for k := range headerer.Headers() {
+			r.Header.Set(k, headerer.Headers().Get(k))
+		}
+	}
+	var b bytes.Buffer
+	r.Body = ioutil.NopCloser(&b)
+	return json.NewEncoder(&b).Encode(request)
+}
+
+// EncodeXMLRequest is an EncodeRequestFunc that serializes the request as a
+// XML object to the Request body. If the request implements Headerer,
+// the provided headers will be applied to the request.
+func EncodeXMLRequest(c context.Context, r *http.Request, request interface{}) error {
+	r.Header.Set("Content-Type", "text/xml; charset=utf-8")
+	if headerer, ok := request.(Headerer); ok {
+		for k := range headerer.Headers() {
+			r.Header.Set(k, headerer.Headers().Get(k))
+		}
+	}
+	var b bytes.Buffer
+	r.Body = ioutil.NopCloser(&b)
+	return xml.NewEncoder(&b).Encode(request)
 }
