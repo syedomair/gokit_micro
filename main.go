@@ -30,7 +30,7 @@ func main() {
 
 	requestCount := expvar.NewCounter("request.count")
 	svc = metricsMiddleware(requestCount)(svc)
-	svc = loggingMiddlware(logger)(svc)
+	//svc = loggingMiddlware(logger)(svc)
 
 	addHandler := httptransport.NewServer(
 		ctx,
