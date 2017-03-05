@@ -275,24 +275,6 @@ func (h *Histogram) CumulativeDistribution() []Bracket {
 	return result
 }
 
-// SignificantFigures returns the significant figures used to create the
-// histogram
-func (h *Histogram) SignificantFigures() int64 {
-	return h.significantFigures
-}
-
-// LowestTrackableValue returns the lower bound on values that will be added
-// to the histogram
-func (h *Histogram) LowestTrackableValue() int64 {
-	return h.lowestTrackableValue
-}
-
-// HighestTrackableValue returns the upper bound on values that will be added
-// to the histogram
-func (h *Histogram) HighestTrackableValue() int64 {
-	return h.highestTrackableValue
-}
-
 // Histogram bar for plotting
 type Bar struct {
 	From, To, Count int64
@@ -351,12 +333,11 @@ func (h *Histogram) Export() *Snapshot {
 		LowestTrackableValue:  h.lowestTrackableValue,
 		HighestTrackableValue: h.highestTrackableValue,
 		SignificantFigures:    h.significantFigures,
-		Counts:                append([]int64(nil), h.counts...), // copy
+		Counts:                h.counts,
 	}
 }
 
-// Import returns a new Histogram populated from the Snapshot data (which the
-// caller must stop accessing).
+// Import returns a new Histogram populated from the Snapshot data.
 func Import(s *Snapshot) *Histogram {
 	h := New(s.LowestTrackableValue, s.HighestTrackableValue, int(s.SignificantFigures))
 	h.counts = s.Counts

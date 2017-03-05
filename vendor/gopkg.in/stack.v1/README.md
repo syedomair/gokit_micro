@@ -1,7 +1,6 @@
-[![GoDoc](https://godoc.org/github.com/go-stack/stack?status.svg)](https://godoc.org/github.com/go-stack/stack)
-[![Go Report Card](https://goreportcard.com/badge/go-stack/stack)](https://goreportcard.com/report/go-stack/stack)
-[![TravisCI](https://travis-ci.org/go-stack/stack.svg?branch=master)](https://travis-ci.org/go-stack/stack)
-[![Coverage Status](https://coveralls.io/repos/github/go-stack/stack/badge.svg?branch=master)](https://coveralls.io/github/go-stack/stack?branch=master)
+[![GoDoc](https://godoc.org/gopkg.in/stack.v1
+?status.svg)](https://godoc.org/gopkg.in/stack.v1
+) [![Build Status](https://travis-ci.org/go-stack/stack.svg?branch=master)](https://travis-ci.org/go-stack/stack)
 
 # stack
 
@@ -13,9 +12,10 @@ the program counter (pc) values returned by runtime.Callers.
 
 ## Versioning
 
-Package stack publishes releases via [semver](http://semver.org/) compatible Git
-tags prefixed with a single 'v'. The master branch always contains the latest
-release. The develop branch contains unreleased commits.
+Package stack publishes stable APIs via gopkg.in. The most recent is v1, which
+is imported like so:
+
+    import "gopkg.in/stack.v1"
 
 ## Formatting
 

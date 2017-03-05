@@ -1,41 +1,37 @@
 {
-	"ImportPath": "github.com/syedomair/gokit_micro",
-	"GoVersion": "go1.7",
-	"GodepVersion": "v78",
+	"ImportPath": "github.com/heroku-examples/go-kit-ex1",
+	"GoVersion": "go1.6",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/codahale/hdrhistogram",
-			"Rev": "3a0bb77429bd3a61596f5e8a3172445844342120"
+			"Rev": "e88be87d51429689cef99043a54150d733265cd7"
 		},
 		{
 			"ImportPath": "github.com/go-kit/kit/endpoint",
-			"Comment": "v0.3.0-107-g46c895b",
-			"Rev": "46c895be14ff57774b1001447006caaf33454adb"
+			"Rev": "f8fe4d35c4d3c7c57a0885cc0c6b5e24ac6f425a"
 		},
 		{
 			"ImportPath": "github.com/go-kit/kit/log",
-			"Comment": "v0.3.0-107-g46c895b",
-			"Rev": "46c895be14ff57774b1001447006caaf33454adb"
+			"Rev": "f8fe4d35c4d3c7c57a0885cc0c6b5e24ac6f425a"
 		},
 		{
 			"ImportPath": "github.com/go-kit/kit/metrics",
-			"Comment": "v0.3.0-107-g46c895b",
-			"Rev": "46c895be14ff57774b1001447006caaf33454adb"
+			"Rev": "f8fe4d35c4d3c7c57a0885cc0c6b5e24ac6f425a"
 		},
 		{
 			"ImportPath": "github.com/go-kit/kit/metrics/expvar",
-			"Comment": "v0.3.0-107-g46c895b",
-			"Rev": "46c895be14ff57774b1001447006caaf33454adb"
+			"Rev": "f8fe4d35c4d3c7c57a0885cc0c6b5e24ac6f425a"
 		},
 		{
 			"ImportPath": "github.com/go-kit/kit/ratelimit",
-			"Comment": "v0.3.0-107-g46c895b",
-			"Rev": "46c895be14ff57774b1001447006caaf33454adb"
+			"Rev": "f8fe4d35c4d3c7c57a0885cc0c6b5e24ac6f425a"
 		},
 		{
 			"ImportPath": "github.com/go-kit/kit/transport/http",
-			"Comment": "v0.3.0-107-g46c895b",
-			"Rev": "46c895be14ff57774b1001447006caaf33454adb"
+			"Rev": "f8fe4d35c4d3c7c57a0885cc0c6b5e24ac6f425a"
 		},
 		{
 			"ImportPath": "github.com/juju/ratelimit",
@@ -43,21 +39,20 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
-			"Rev": "f2499483f923065a842d38eb4c7f1927e6fc6e6d"
+			"Rev": "8968c61983e8f51a91b8c0ef25bf739278c89634"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context/ctxhttp",
-			"Rev": "f2499483f923065a842d38eb4c7f1927e6fc6e6d"
+			"Rev": "8968c61983e8f51a91b8c0ef25bf739278c89634"
 		},
 		{
 			"ImportPath": "gopkg.in/logfmt.v0",
-			"Comment": "v0.3.0",
-			"Rev": "390ab7935ee28ec6b286364bba9b4dd6410cb3d5"
+			"Rev": "c50dc9aa845e681529d8e49d3dc11ec0195aacac"
 		},
 		{
 			"ImportPath": "gopkg.in/stack.v1",
-			"Comment": "v1.5.2",
-			"Rev": "100eb0c0a9c5b306ca2fb4f165df21d80ada4b82"
+			"Comment": "v1.1",
+			"Rev": "3311a467df6af5844aa1b9d748e4d004b109b984"
 		}
 	]
 }
