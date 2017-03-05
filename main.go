@@ -2,38 +2,44 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
-	"strings"
-        "os"
-	"github.com/go-kit/kit/endpoint"
+	"os"
+
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
+
+	"github.com/go-kit/kit/log"
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
-// StringService provides operations on strings.
-type StringService interface {
-	Uppercase(string) (string, error)
-	Count(string) int
-}
-
-type stringService struct{}
-
-func (stringService) Uppercase(s string) (string, error) {
-	if s == "" {
-		return "", ErrEmpty
-	}
-	return strings.ToUpper(s), nil
-}
-
-func (stringService) Count(s string) int {
-	return len(s)
-}
-
 func main() {
 	ctx := context.Background()
-	svc := stringService{}
+	logger := log.NewLogfmtLogger(os.Stderr)
+
+	fieldKeys := []string{"method", "error"}
+	requestCount := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "my_group",
+		Subsystem: "string_service",
+		Name:      "request_count",
+		Help:      "Number of requests received.",
+	}, fieldKeys)
+	requestLatency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+		Namespace: "my_group",
+		Subsystem: "string_service",
+		Name:      "request_latency_microseconds",
+		Help:      "Total duration of requests in microseconds.",
+	}, fieldKeys)
+	countResult := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+		Namespace: "my_group",
+		Subsystem: "string_service",
+		Name:      "count_result",
+		Help:      "The result of each count method.",
+	}, []string{}) // no fields here
+
+	var svc StringService
+	svc = stringService{}
+	svc = loggingMiddleware{logger, svc}
+	svc = instrumentingMiddleware{requestCount, requestLatency, countResult, svc}
 
 	uppercaseHandler := httptransport.NewServer(
 		ctx,
@@ -51,65 +57,8 @@ func main() {
 
 	http.Handle("/uppercase", uppercaseHandler)
 	http.Handle("/count", countHandler)
+	http.Handle("/metrics", stdprometheus.Handler())
         port := os.Getenv("PORT")
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	logger.Log("msg", "HTTP", "addr", ":"+port)
+	logger.Log("err", http.ListenAndServe(":"+port, nil))
 }
-
-func makeUppercaseEndpoint(svc StringService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(uppercaseRequest)
-		v, err := svc.Uppercase(req.S)
-		if err != nil {
-			return uppercaseResponse{v, err.Error()}, nil
-		}
-		return uppercaseResponse{v, ""}, nil
-	}
-}
-
-func makeCountEndpoint(svc StringService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(countRequest)
-		v := svc.Count(req.S)
-		return countResponse{v}, nil
-	}
-}
-
-func decodeUppercaseRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var request uppercaseRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
-	}
-	return request, nil
-}
-
-func decodeCountRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var request countRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
-	}
-	return request, nil
-}
-
-func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	return json.NewEncoder(w).Encode(response)
-}
-
-type uppercaseRequest struct {
-	S string `json:"s"`
-}
-
-type uppercaseResponse struct {
-	V   string `json:"v"`
-	Err string `json:"err,omitempty"` // errors don't define JSON marshaling
-}
-
-type countRequest struct {
-	S string `json:"s"`
-}
-
-type countResponse struct {
-	V int `json:"v"`
-}
-
-// ErrEmpty is returned when an input string is empty.
-var ErrEmpty = errors.New("empty string")
