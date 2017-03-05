@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
+        "os"
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -51,7 +51,8 @@ func main() {
 
 	http.Handle("/uppercase", uppercaseHandler)
 	http.Handle("/count", countHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+        port := os.Getenv("PORT")
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func makeUppercaseEndpoint(svc StringService) endpoint.Endpoint {
