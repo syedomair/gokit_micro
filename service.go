@@ -5,7 +5,7 @@ import (
 	"strings"
         "database/sql"
         _ "github.com/lib/pq"
-        "os"
+        //"os"
         "fmt"
 )
 
@@ -39,7 +39,9 @@ func (stringService) Uppercase(s string) (string, error) {
 
 func (stringService) Count(s string) int {
 
-        db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+        //db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+        dbUrl := "postgres://lrfegrijyhscgm:460c27d5d24257af04c92fcb2062a17affacc538875471c499cdf274b596d739@ec2-54-225-99-171.compute-1.amazonaws.com:5432/d3fptb61ed7ps2"
+        db, err := sql.Open("postgres", dbUrl)
         if err != nil {
             fmt.Println("Error: The data source arguments are not valid")
         }
