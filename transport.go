@@ -7,9 +7,9 @@ import (
 	"net/http"
 )
 
-func makePublicBooksEndpoint(bookService BookService) endpoint.Endpoint {
+func makePublicBooksEndpoint(bookService BookService, env *Env) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		return bookService.PublicBooks(), nil
+		return bookService.PublicBooks(env), nil
 	}
 }
 
