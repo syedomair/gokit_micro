@@ -1,29 +1,35 @@
 package main
 
 import (
-    "context"
-    "net/http"
-    "os"
-    "github.com/go-kit/kit/log"
-    httptransport "github.com/go-kit/kit/transport/http"
+	"context"
+	"database/sql"
+	"github.com/go-kit/kit/log"
+	"net/http"
+	"os"
 )
 
+type Env struct {
+	db     *sql.DB
+	logger log.Logger
+	ctx    context.Context
+}
+
 func main() {
-    ctx := context.Background()
-    logger := log.NewLogfmtLogger(os.Stderr)
 
-    var service BookService
-    service = bookService{}
+	logger := log.NewLogfmtLogger(log.StdlibWriter{})
+	db, err := DBService(logger)
+	if err != nil {
+		return
+	}
 
-    publicBookHandler := httptransport.NewServer(
-        ctx,
-        makePublicBooksEndpoint(service),
-        decodeRequest,
-        encodeResponse,
-    )
+	env := &Env{db: db,
+		logger: logger,
+		ctx:    context.Background()}
 
-    http.Handle("/public/books", publicBookHandler)
-    port := os.Getenv("PORT")
-    logger.Log("msg", "HTTP", "addr", ":"+port)
-    logger.Log("err", http.ListenAndServe(":"+port, nil))
+	router := NewRouter(env)
+
+	port := os.Getenv("PORT")
+	env.logger.Log("msg", "Listening at HTTP", "PORT", port)
+	env.logger.Log("err", http.ListenAndServe(":"+port, router))
+
 }
